@@ -5,6 +5,7 @@
 chmod +x setup.sh
 ./setup.sh
 ```
+This script installs dependencies and builds the game into the `/docs` folder for easy deployment on GitHub Pages.
 
 When ready for local development:
 ```bash
@@ -12,7 +13,7 @@ npm install
 npm run dev
 ```
 
-GitHub Pages deployment is automated to the `gh-pages` branch.
+GitHub Pages serves the site from the `/docs` folder on the `main` branch.
 
 ## 🎮 How to Play
 
