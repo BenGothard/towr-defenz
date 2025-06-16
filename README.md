@@ -1,15 +1,15 @@
 # JS Game Starter
 
 ## 🚀 Setup
-\`\`\`bash
+```bash
 chmod +x setup.sh
 ./setup.sh
-\`\`\`
+```
 
 When ready for local development:
-\`\`\`bash
+```bash
 npm install
 npm run dev
-\`\`\`
+```
 
-GitHub Pages deployment is automated to \`gh-pages\` branch.
+GitHub Pages deployment is automated to the `gh-pages` branch.
