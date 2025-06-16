@@ -7,9 +7,10 @@ const restartBtn = document.getElementById('restartBtn');
 const instructions = document.getElementById('instructions');
 const storeDiv = document.getElementById('store');
 const towersData = [
-  { emoji: '🏰', name: 'Basic Tower', damage: 1, cost: 5 }
+  { emoji: '🏰', name: 'Basic Tower', damage: 1, cost: 5, projectile: '✨', slow: 1 },
+  { emoji: '❄️', name: 'Frost Tower', damage: 1, cost: 8, projectile: '❄️', slow: 0.5 }
 ];
-const projectileEmojis = ['✨', '💥', '🔥'];
+let selectedTowerIndex = 0;
 const enemyTypes = [
   { emoji: '👾', health: 3, speed: 40 },
   { emoji: '🤖', health: 6, speed: 35 },
@@ -17,8 +18,14 @@ const enemyTypes = [
 ];
 
 function showStore() {
-  storeDiv.innerHTML = `${towersData[0].emoji} ${towersData[0].name} - Cost ${towersData[0].cost}<br>` +
-    `Click tower to upgrade (cost 5×level)`;
+  storeDiv.innerHTML = towersData.map((t, i) =>
+    `<label><input type="radio" name="towerType" value="${i}" ${i === selectedTowerIndex ? 'checked' : ''}> ${t.emoji} ${t.name} - Cost ${t.cost}</label>`
+  ).join('<br>') +
+  '<div>Click tower to upgrade (cost 5×level)</div>';
+  const radios = storeDiv.querySelectorAll('input[name="towerType"]');
+  radios.forEach(r => r.addEventListener('change', e => {
+    selectedTowerIndex = Number(e.target.value);
+  }));
 }
 showStore();
 
@@ -62,6 +69,8 @@ class Enemy {
     this.emoji = type.emoji;
     this.pathIndex = 0;
     this.reward = Math.ceil(this.health / 3);
+    this.slowFactor = 1;
+    this.slowDuration = 0;
   }
   update(dt) {
     const target = path[this.pathIndex + 1];
@@ -69,15 +78,27 @@ class Enemy {
     const dx = target.x - this.x;
     const dy = target.y - this.y;
     const dist = Math.hypot(dx, dy);
-    if (dist < this.speed * dt) {
+    const currentSpeed = this.speed * this.slowFactor;
+    if (dist < currentSpeed * dt) {
       this.x = target.x;
       this.y = target.y;
       this.pathIndex++;
     } else {
-      this.x += (dx / dist) * this.speed * dt;
-      this.y += (dy / dist) * this.speed * dt;
+      this.x += (dx / dist) * currentSpeed * dt;
+      this.y += (dy / dist) * currentSpeed * dt;
+    }
+    if (this.slowDuration > 0) {
+      this.slowDuration -= dt;
+      if (this.slowDuration <= 0) {
+        this.slowFactor = 1;
+      }
     }
     return this.pathIndex >= path.length - 1;
+  }
+
+  applySlow(factor, duration) {
+    this.slowFactor = factor;
+    this.slowDuration = duration;
   }
   draw() {
     ctx.font = '24px sans-serif';
@@ -87,12 +108,13 @@ class Enemy {
 }
 
 class Projectile {
-  constructor(x, y, target, emoji, damage) {
+  constructor(x, y, target, emoji, damage, slow) {
     this.x = x;
     this.y = y;
     this.target = target;
     this.emoji = emoji;
     this.damage = damage;
+    this.slow = slow;
     this.speed = 200;
   }
   update(dt) {
@@ -101,6 +123,9 @@ class Projectile {
     const dist = Math.hypot(dx, dy);
     if (dist < 5) {
       this.target.health -= this.damage;
+      if (this.slow < 1) {
+        this.target.applySlow(this.slow, 2);
+      }
       return true; // hit
     }
     this.x += (dx / dist) * this.speed * dt;
@@ -115,15 +140,16 @@ class Projectile {
 }
 
 class Tower {
-  constructor(x, y) {
+  constructor(x, y, data) {
     this.x = x;
     this.y = y;
+    this.data = data;
     this.range = 80;
     this.cooldown = 0;
     this.level = 1;
   }
   upgrade() {
-    if (this.level < projectileEmojis.length) {
+    if (this.level < 3) {
       this.level += 1;
       return true;
     }
@@ -134,7 +160,8 @@ class Tower {
     if (this.cooldown <= 0) {
       const target = enemies.find(e => Math.hypot(e.x - this.x, e.y - this.y) < this.range);
       if (target) {
-        projectiles.push(new Projectile(this.x, this.y, target, projectileEmojis[this.level-1], this.level));
+        const damage = this.level * this.data.damage;
+        projectiles.push(new Projectile(this.x, this.y, target, this.data.projectile, damage, this.data.slow));
         this.cooldown = 0.5; // fire every half second
       }
     }
@@ -142,7 +169,7 @@ class Tower {
   draw() {
     ctx.font = '24px sans-serif';
     ctx.fillStyle = '#fff';
-    ctx.fillText('🏰', this.x - 12, this.y);
+    ctx.fillText(this.data.emoji, this.x - 12, this.y);
   }
 }
 
@@ -223,9 +250,10 @@ canvas.addEventListener('click', e => {
       currency -= cost;
     }
   } else {
-    const cost = towersData[0].cost;
+    const data = towersData[selectedTowerIndex];
+    const cost = data.cost;
     if (currency >= cost && !isPointOnPath(offsetX, offsetY)) {
-      towers.push(new Tower(offsetX, offsetY));
+      towers.push(new Tower(offsetX, offsetY, data));
       currency -= cost;
     }
   }
