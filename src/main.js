@@ -58,7 +58,9 @@ class Enemy {
     this.x = path[0].x;
     this.y = path[0].y;
     this.speed = type.speed * level;
-    this.health = Math.ceil(type.health * level);
+    this.maxHealth = Math.ceil(type.health * level);
+    this.health = this.maxHealth;
+    this.reward = Math.ceil(this.maxHealth / 2);
     this.emoji = type.emoji;
     this.pathIndex = 0;
   }
@@ -202,7 +204,7 @@ function restartGame() {
   spawnCount = 0;
   hud.textContent = `💰${currency} ❤️${lives}`;
   started = false;
-  instructions.textContent = 'Click anywhere on the board to build towers. You start with enough gold for one tower.';
+  instructions.textContent = 'Click anywhere on the board to build towers. You start with enough gold for one tower. Defeated enemies drop gold, and tougher foes drop more!';
   instructions.style.display = 'block';
 }
 
@@ -269,8 +271,8 @@ function loop(ts) {
       projectiles.splice(projectiles.indexOf(projectile), 1);
     }
   }
-  enemies.filter(e => e.health <= 0).forEach(() => {
-    currency += 1;
+  enemies.filter(e => e.health <= 0).forEach(e => {
+    currency += e.reward;
   });
   for (let i = enemies.length - 1; i >= 0; i--) {
     if (enemies[i].health <= 0 || enemies[i].pathIndex >= path.length - 1) {

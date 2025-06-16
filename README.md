@@ -20,5 +20,6 @@ GitHub Pages deployment is automated to the `gh-pages` branch.
 2. Open the local URL printed in the terminal (usually `http://localhost:5173`).
 3. Click anywhere on the canvas to place towers.
 4. Defend your path from the waves of emoji enemies!
+5. Defeating enemies grants gold. Harder enemies give more gold.
 
 After building (`./setup.sh`), you can also open `docs/index.html` directly in your browser.
