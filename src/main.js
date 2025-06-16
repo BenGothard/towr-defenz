@@ -238,15 +238,15 @@ function loop(ts) {
 
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
-    // ramp up difficulty as waves progress
-    const level = 1 + spawnCount * 0.05;
+    // ramp up difficulty more slowly as waves progress
+    const level = 1 + spawnCount * 0.03;
     const type = enemyTypes[
-      Math.min(enemyTypes.length - 1, Math.floor(spawnCount / 15))
+      Math.min(enemyTypes.length - 1, Math.floor(spawnCount / 20))
     ];
     enemies.push(new Enemy(type, level));
     spawnCount++;
-    // decrease spawn interval but cap at half a second
-    spawnTimer = Math.max(0.5, 2 - spawnCount * 0.05);
+    // decrease spawn interval but cap at 0.7 seconds
+    spawnTimer = Math.max(0.7, 2 - spawnCount * 0.03);
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
