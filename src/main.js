@@ -174,7 +174,7 @@ function isPointOnPath(x, y) {
 function startGame() {
   if (!started) {
     started = true;
-    towers.push(new Tower(canvas.width / 2, canvas.height / 2 - 50));
+    currency += towersData[0].cost; // starting gold for first tower
   }
   if (!running) {
     running = true;
@@ -202,7 +202,7 @@ function restartGame() {
   spawnCount = 0;
   hud.textContent = `💰${currency} ❤️${lives}`;
   started = false;
-  instructions.textContent = 'Click anywhere on the board to build towers and defend the path.';
+  instructions.textContent = 'Click anywhere on the board to build towers. You start with enough gold for one tower.';
   instructions.style.display = 'block';
 }
 
