@@ -1,0 +1,12 @@
+{
+  "name": "js-game-starter",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0",
+    "npm-add-script": "^1.0.0"
+  }
+}

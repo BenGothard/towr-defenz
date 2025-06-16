@@ -1,0 +1,9 @@
+# dependencies
+node_modules/
+
+# build output (if you ever switch to dist/)
+dist/
+
+# IDE / OS artifacts
+.DS_Store
+*.log
