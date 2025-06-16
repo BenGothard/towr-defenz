@@ -9,53 +9,89 @@ const storeDiv = document.getElementById('store');
 const towersData = [
   { emoji: '🏰', name: 'Basic Tower', damage: 1, cost: 5 }
 ];
+const projectileEmojis = ['✨', '💥', '🔥'];
+const enemyTypes = [
+  { emoji: '👾', health: 3, speed: 40 },
+  { emoji: '🤖', health: 6, speed: 35 },
+  { emoji: '🦹', health: 10, speed: 30 }
+];
 
 function showStore() {
-  storeDiv.innerHTML = towersData
-    .map(t => `${t.emoji} ${t.name} - Damage ${t.damage} - Cost ${t.cost}`)
-    .join('<br>');
+  storeDiv.innerHTML = `${towersData[0].emoji} ${towersData[0].name} - Cost ${towersData[0].cost}<br>` +
+    `Click tower to upgrade (cost 5×level)`;
 }
 showStore();
 
-let pathY;
+let path = [];
 
 function resizeCanvas() {
   const size = Math.min(window.innerWidth, window.innerHeight) * 0.75;
   canvas.width = size;
   canvas.height = size;
-  pathY = canvas.height / 2 + 12;
+  const w = canvas.width;
+  const h = canvas.height;
+  path = [
+    { x: 0, y: h * 0.25 },
+    { x: w * 0.25, y: h * 0.25 },
+    { x: w * 0.25, y: h * 0.75 },
+    { x: w * 0.5, y: h * 0.75 },
+    { x: w * 0.5, y: h * 0.25 },
+    { x: w * 0.75, y: h * 0.25 },
+    { x: w * 0.75, y: h * 0.75 },
+    { x: w, y: h * 0.75 }
+  ];
 }
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 let currency = 0;
+let lives = 10;
 let started = false;
 let running = false;
 let animationId;
+let spawnCount = 0;
 
 class Enemy {
-  constructor() {
-    this.x = 0;
-    this.y = canvas.height / 2;
-    this.speed = 40; // pixels per second
-    this.health = 3;
+  constructor(type, level) {
+    this.type = type;
+    this.x = path[0].x;
+    this.y = path[0].y;
+    this.speed = type.speed * level;
+    this.health = Math.ceil(type.health * level);
+    this.emoji = type.emoji;
+    this.pathIndex = 0;
   }
   update(dt) {
-    this.x += this.speed * dt;
+    const target = path[this.pathIndex + 1];
+    if (!target) return true;
+    const dx = target.x - this.x;
+    const dy = target.y - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < this.speed * dt) {
+      this.x = target.x;
+      this.y = target.y;
+      this.pathIndex++;
+    } else {
+      this.x += (dx / dist) * this.speed * dt;
+      this.y += (dy / dist) * this.speed * dt;
+    }
+    return this.pathIndex >= path.length - 1;
   }
   draw() {
     ctx.font = '24px sans-serif';
     ctx.fillStyle = '#fff';
-    ctx.fillText('👾', this.x, this.y);
+    ctx.fillText(this.emoji, this.x - 12, this.y + 8);
   }
 }
 
 class Projectile {
-  constructor(x, y, target) {
+  constructor(x, y, target, emoji, damage) {
     this.x = x;
     this.y = y;
     this.target = target;
+    this.emoji = emoji;
+    this.damage = damage;
     this.speed = 200;
   }
   update(dt) {
@@ -63,7 +99,7 @@ class Projectile {
     const dy = this.target.y - this.y;
     const dist = Math.hypot(dx, dy);
     if (dist < 5) {
-      this.target.health -= 1;
+      this.target.health -= this.damage;
       return true; // hit
     }
     this.x += (dx / dist) * this.speed * dt;
@@ -73,7 +109,7 @@ class Projectile {
   draw() {
     ctx.font = '20px sans-serif';
     ctx.fillStyle = '#fff';
-    ctx.fillText('✨', this.x, this.y);
+    ctx.fillText(this.emoji, this.x, this.y);
   }
 }
 
@@ -83,13 +119,21 @@ class Tower {
     this.y = y;
     this.range = 80;
     this.cooldown = 0;
+    this.level = 1;
+  }
+  upgrade() {
+    if (this.level < projectileEmojis.length) {
+      this.level += 1;
+      return true;
+    }
+    return false;
   }
   update(dt, enemies) {
     this.cooldown -= dt;
     if (this.cooldown <= 0) {
       const target = enemies.find(e => Math.hypot(e.x - this.x, e.y - this.y) < this.range);
       if (target) {
-        projectiles.push(new Projectile(this.x, this.y, target));
+        projectiles.push(new Projectile(this.x, this.y, target, projectileEmojis[this.level-1], this.level));
         this.cooldown = 0.5; // fire every half second
       }
     }
@@ -115,6 +159,7 @@ function startGame() {
   if (!running) {
     running = true;
     instructions.style.display = 'none';
+    hud.textContent = `💰${currency} ❤️${lives}`;
     last = performance.now();
     animationId = requestAnimationFrame(loop);
   }
@@ -133,8 +178,11 @@ function restartGame() {
   towers.length = 0;
   projectiles.length = 0;
   currency = 0;
-  hud.textContent = '💰0';
+  lives = 10;
+  spawnCount = 0;
+  hud.textContent = `💰${currency} ❤️${lives}`;
   started = false;
+  instructions.textContent = 'Click anywhere on the board to build towers and defend the path.';
   instructions.style.display = 'block';
 }
 
@@ -146,10 +194,18 @@ canvas.addEventListener('click', e => {
     startGame();
     return;
   }
-  const cost = towersData[0].cost;
-  if (currency >= cost) {
-    towers.push(new Tower(e.offsetX, e.offsetY));
-    currency -= cost;
+  const tower = towers.find(t => Math.hypot(t.x - e.offsetX, t.y - e.offsetY) < 20);
+  if (tower) {
+    const cost = tower.level * 5;
+    if (currency >= cost && tower.upgrade()) {
+      currency -= cost;
+    }
+  } else {
+    const cost = towersData[0].cost;
+    if (currency >= cost) {
+      towers.push(new Tower(e.offsetX, e.offsetY));
+      currency -= cost;
+    }
   }
 });
 
@@ -160,18 +216,29 @@ function loop(ts) {
 
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
-    enemies.push(new Enemy());
+    const level = 1 + spawnCount * 0.05;
+    const type = enemyTypes[Math.min(enemyTypes.length - 1, Math.floor(spawnCount / 10))];
+    enemies.push(new Enemy(type, level));
+    spawnCount++;
     spawnTimer = 2; // spawn every 2 seconds
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#333';
   ctx.fillRect(0, 0, canvas.width, canvas.height); // build area
-  ctx.fillStyle = '#555';
-  ctx.fillRect(0, pathY - pathHeight / 2, canvas.width, pathHeight); // path
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = pathHeight;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (const p of path.slice(1)) {
+    ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
 
   for (const enemy of enemies) {
-    enemy.update(dt);
+    if (enemy.update(dt)) {
+      lives -= 1;
+    }
   }
   for (const tower of towers) {
     tower.update(dt, enemies);
@@ -185,7 +252,7 @@ function loop(ts) {
     currency += 1;
   });
   for (let i = enemies.length - 1; i >= 0; i--) {
-    if (enemies[i].health <= 0 || enemies[i].x > canvas.width) {
+    if (enemies[i].health <= 0 || enemies[i].pathIndex >= path.length - 1) {
       enemies.splice(i, 1);
     }
   }
@@ -194,7 +261,13 @@ function loop(ts) {
   for (const tower of towers) tower.draw();
   for (const projectile of projectiles) projectile.draw();
 
-  hud.textContent = `💰${currency}`;
+  hud.textContent = `💰${currency} ❤️${lives}`;
+
+  if (lives <= 0) {
+    pauseGame();
+    instructions.textContent = 'Game Over';
+    instructions.style.display = 'block';
+  }
 
   animationId = requestAnimationFrame(loop);
 }
