@@ -6,9 +6,17 @@ const pauseBtn = document.getElementById('pauseBtn');
 const restartBtn = document.getElementById('restartBtn');
 const instructions = document.getElementById('instructions');
 
-// make the board larger
-canvas.width = 600;
-canvas.height = 600;
+let pathY;
+
+function resizeCanvas() {
+  const size = Math.min(window.innerWidth, window.innerHeight) * 0.75;
+  canvas.width = size;
+  canvas.height = size;
+  pathY = canvas.height / 2 + 12;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
 let currency = 0;
 let started = false;
@@ -85,7 +93,6 @@ class Tower {
 const enemies = [];
 const towers = [];
 const projectiles = [];
-const pathY = canvas.height / 2 + 12;
 const pathHeight = 20;
 let spawnTimer = 0;
 
