@@ -151,6 +151,26 @@ const projectiles = [];
 const pathHeight = 20;
 let spawnTimer = 0;
 
+function distanceToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+  const t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+  const clamped = Math.max(0, Math.min(1, t));
+  const cx = x1 + clamped * dx;
+  const cy = y1 + clamped * dy;
+  return Math.hypot(px - cx, py - cy);
+}
+
+function isPointOnPath(x, y) {
+  for (let i = 0; i < path.length - 1; i++) {
+    if (distanceToSegment(x, y, path[i].x, path[i].y, path[i + 1].x, path[i + 1].y) <= pathHeight / 2) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function startGame() {
   if (!started) {
     started = true;
@@ -194,7 +214,8 @@ canvas.addEventListener('click', e => {
     startGame();
     return;
   }
-  const tower = towers.find(t => Math.hypot(t.x - e.offsetX, t.y - e.offsetY) < 20);
+  const { offsetX, offsetY } = e;
+  const tower = towers.find(t => Math.hypot(t.x - offsetX, t.y - offsetY) < 20);
   if (tower) {
     const cost = tower.level * 5;
     if (currency >= cost && tower.upgrade()) {
@@ -202,8 +223,8 @@ canvas.addEventListener('click', e => {
     }
   } else {
     const cost = towersData[0].cost;
-    if (currency >= cost) {
-      towers.push(new Tower(e.offsetX, e.offsetY));
+    if (currency >= cost && !isPointOnPath(offsetX, offsetY)) {
+      towers.push(new Tower(offsetX, offsetY));
       currency -= cost;
     }
   }
