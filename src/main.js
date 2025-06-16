@@ -5,6 +5,17 @@ const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 const restartBtn = document.getElementById('restartBtn');
 const instructions = document.getElementById('instructions');
+const storeDiv = document.getElementById('store');
+const towersData = [
+  { emoji: '🏰', name: 'Basic Tower', damage: 1, cost: 5 }
+];
+
+function showStore() {
+  storeDiv.innerHTML = towersData
+    .map(t => `${t.emoji} ${t.name} - Damage ${t.damage} - Cost ${t.cost}`)
+    .join('<br>');
+}
+showStore();
 
 let pathY;
 
@@ -135,9 +146,10 @@ canvas.addEventListener('click', e => {
     startGame();
     return;
   }
-  if (currency >= 5) {
+  const cost = towersData[0].cost;
+  if (currency >= cost) {
     towers.push(new Tower(e.offsetX, e.offsetY));
-    currency -= 5;
+    currency -= cost;
   }
 });
 

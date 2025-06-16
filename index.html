@@ -6,13 +6,16 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div id="hud">💰0</div>
-  <div id="controls">
-    <button id="startBtn">Start</button>
-    <button id="pauseBtn">Pause</button>
-    <button id="restartBtn">Restart</button>
+  <div id="ui">
+    <div id="hud">💰0</div>
+    <div id="controls">
+      <button id="startBtn">Start</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="restartBtn">Restart</button>
+    </div>
+    <div id="instructions">Click anywhere on the board to build towers and defend the path.</div>
+    <div id="store"></div>
   </div>
-  <div id="instructions">Click anywhere on the board to build towers and defend the path.</div>
   <canvas id="game"></canvas>
   <script type="module" src="./src/main.js"></script>
 </body>
