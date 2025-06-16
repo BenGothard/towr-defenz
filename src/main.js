@@ -27,6 +27,32 @@ class Enemy {
   }
 }
 
+class Projectile {
+  constructor(x, y, target) {
+    this.x = x;
+    this.y = y;
+    this.target = target;
+    this.speed = 200;
+  }
+  update(dt) {
+    const dx = this.target.x - this.x;
+    const dy = this.target.y - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 5) {
+      this.target.health -= 1;
+      return true; // hit
+    }
+    this.x += (dx / dist) * this.speed * dt;
+    this.y += (dy / dist) * this.speed * dt;
+    return false;
+  }
+  draw() {
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('✨', this.x, this.y);
+  }
+}
+
 class Tower {
   constructor(x, y) {
     this.x = x;
@@ -39,7 +65,7 @@ class Tower {
     if (this.cooldown <= 0) {
       const target = enemies.find(e => Math.hypot(e.x - this.x, e.y - this.y) < this.range);
       if (target) {
-        target.health -= 1;
+        projectiles.push(new Projectile(this.x, this.y, target));
         this.cooldown = 0.5; // fire every half second
       }
     }
@@ -53,6 +79,9 @@ class Tower {
 
 const enemies = [];
 const towers = [];
+const projectiles = [];
+const pathY = canvas.height / 2 + 12;
+const pathHeight = 20;
 let spawnTimer = 0;
 
 function startGame() {
@@ -90,14 +119,21 @@ function loop(ts) {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#ccc';
-  ctx.fillRect(0, canvas.height / 2 + 12, canvas.width, 20); // path
+  ctx.fillStyle = '#333';
+  ctx.fillRect(0, 0, canvas.width, canvas.height); // build area
+  ctx.fillStyle = '#555';
+  ctx.fillRect(0, pathY - pathHeight / 2, canvas.width, pathHeight); // path
 
   for (const enemy of enemies) {
     enemy.update(dt);
   }
   for (const tower of towers) {
     tower.update(dt, enemies);
+  }
+  for (const projectile of projectiles) {
+    if (projectile.update(dt)) {
+      projectiles.splice(projectiles.indexOf(projectile), 1);
+    }
   }
   enemies.filter(e => e.health <= 0).forEach(() => {
     currency += 1;
@@ -110,6 +146,7 @@ function loop(ts) {
 
   for (const enemy of enemies) enemy.draw();
   for (const tower of towers) tower.draw();
+  for (const projectile of projectiles) projectile.draw();
 
   hud.textContent = `💰${currency}`;
 
