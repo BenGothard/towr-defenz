@@ -1,10 +1,12 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const hud = document.getElementById('hud');
+const intro = document.getElementById('intro');
 canvas.width = 400;
 canvas.height = 400;
 
 let currency = 0;
+let started = false;
 
 class Enemy {
   constructor() {
@@ -51,7 +53,21 @@ const enemies = [];
 const towers = [];
 let spawnTimer = 0;
 
+function startGame() {
+  if (!started) {
+    started = true;
+    intro.style.display = 'none';
+    last = performance.now();
+    requestAnimationFrame(loop);
+  }
+}
+
+intro.addEventListener('click', startGame);
 canvas.addEventListener('click', e => {
+  if (!started) {
+    startGame();
+    return;
+  }
   if (currency >= 5) {
     towers.push(new Tower(e.offsetX, e.offsetY));
     currency -= 5;
@@ -95,4 +111,5 @@ function loop(ts) {
 
   requestAnimationFrame(loop);
 }
-requestAnimationFrame(loop);
+
+// initial pause until user clicks
