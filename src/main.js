@@ -61,6 +61,7 @@ class Enemy {
     this.health = Math.ceil(type.health * level);
     this.emoji = type.emoji;
     this.pathIndex = 0;
+    this.reward = Math.ceil(this.health / 3);
   }
   update(dt) {
     const target = path[this.pathIndex + 1];
@@ -272,8 +273,8 @@ function loop(ts) {
       projectiles.splice(projectiles.indexOf(projectile), 1);
     }
   }
-  enemies.filter(e => e.health <= 0).forEach(() => {
-    currency += 1;
+  enemies.filter(e => e.health <= 0).forEach(e => {
+    currency += e.reward;
   });
   for (let i = enemies.length - 1; i >= 0; i--) {
     if (enemies[i].health <= 0 || enemies[i].pathIndex >= path.length - 1) {
