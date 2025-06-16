@@ -115,7 +115,8 @@ class Projectile {
     this.emoji = emoji;
     this.damage = damage;
     this.slow = slow;
-    this.speed = 200;
+    // Ensure the projectile is always faster than its target
+    this.speed = Math.max(250, this.target.speed * 1.5);
   }
   update(dt) {
     const dx = this.target.x - this.x;
