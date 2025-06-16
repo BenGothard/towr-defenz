@@ -18,6 +18,7 @@ class Enemy {
   }
   draw() {
     ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#fff';
     ctx.fillText('👾', this.x, this.y);
   }
 }
@@ -41,6 +42,7 @@ class Tower {
   }
   draw() {
     ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#fff';
     ctx.fillText('🏰', this.x - 12, this.y);
   }
 }
