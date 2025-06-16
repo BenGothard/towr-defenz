@@ -1,7 +1,10 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const hud = document.getElementById('hud');
-const intro = document.getElementById('intro');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const restartBtn = document.getElementById('restartBtn');
+const instructions = document.getElementById('instructions');
 
 // make the board larger
 canvas.width = 600;
@@ -9,6 +12,8 @@ canvas.height = 600;
 
 let currency = 0;
 let started = false;
+let running = false;
+let animationId;
 
 class Enemy {
   constructor() {
@@ -87,17 +92,39 @@ let spawnTimer = 0;
 function startGame() {
   if (!started) {
     started = true;
-    intro.style.display = 'none';
-    // add a starter tower at the center of the board
     towers.push(new Tower(canvas.width / 2, canvas.height / 2 - 50));
+  }
+  if (!running) {
+    running = true;
+    instructions.style.display = 'none';
     last = performance.now();
-    requestAnimationFrame(loop);
+    animationId = requestAnimationFrame(loop);
   }
 }
 
-intro.addEventListener('click', startGame);
+function pauseGame() {
+  if (running) {
+    running = false;
+    cancelAnimationFrame(animationId);
+  }
+}
+
+function restartGame() {
+  pauseGame();
+  enemies.length = 0;
+  towers.length = 0;
+  projectiles.length = 0;
+  currency = 0;
+  hud.textContent = '💰0';
+  started = false;
+  instructions.style.display = 'block';
+}
+
+startBtn.addEventListener('click', startGame);
+pauseBtn.addEventListener('click', pauseGame);
+restartBtn.addEventListener('click', restartGame);
 canvas.addEventListener('click', e => {
-  if (!started) {
+  if (!running) {
     startGame();
     return;
   }
@@ -150,7 +177,7 @@ function loop(ts) {
 
   hud.textContent = `💰${currency}`;
 
-  requestAnimationFrame(loop);
+  animationId = requestAnimationFrame(loop);
 }
 
-// initial pause until user clicks
+// initial pause until the start button is pressed
