@@ -2,8 +2,10 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const hud = document.getElementById('hud');
 const intro = document.getElementById('intro');
-canvas.width = 400;
-canvas.height = 400;
+
+// make the board larger
+canvas.width = 600;
+canvas.height = 600;
 
 let currency = 0;
 let started = false;
@@ -57,6 +59,8 @@ function startGame() {
   if (!started) {
     started = true;
     intro.style.display = 'none';
+    // add a starter tower at the center of the board
+    towers.push(new Tower(canvas.width / 2, canvas.height / 2 - 50));
     last = performance.now();
     requestAnimationFrame(loop);
   }
