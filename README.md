@@ -1,4 +1,4 @@
-# JS Game Starter
+# Towr Defenz
 
 ## 🚀 Setup
 ```bash
