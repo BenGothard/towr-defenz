@@ -14,7 +14,9 @@ let selectedTowerIndex = 0;
 const enemyTypes = [
   { emoji: '👾', health: 3, speed: 40 },
   { emoji: '🤖', health: 6, speed: 35 },
-  { emoji: '🦹', health: 10, speed: 30 }
+  { emoji: '🦹', health: 10, speed: 30 },
+  { emoji: '👹', health: 20, speed: 25 },
+  { emoji: '🐉', health: 50, speed: 15, boss: true }
 ];
 
 function showStore() {
@@ -267,15 +269,21 @@ function loop(ts) {
 
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
-    // ramp up difficulty more slowly as waves progress
-    const level = 1 + spawnCount * 0.03;
-    const type = enemyTypes[
-      Math.min(enemyTypes.length - 1, Math.floor(spawnCount / 20))
-    ];
-    enemies.push(new Enemy(type, level));
     spawnCount++;
-    // decrease spawn interval but cap at 0.7 seconds
-    spawnTimer = Math.max(0.7, 2 - spawnCount * 0.03);
+    const level = 1 + spawnCount * 0.03;
+    let type;
+    if (spawnCount % 50 === 0) {
+      // spawn a boss enemy occasionally
+      type = enemyTypes[enemyTypes.length - 1];
+    } else {
+      // regular enemies scale up to the second last entry
+      type = enemyTypes[
+        Math.min(enemyTypes.length - 2, Math.floor(spawnCount / 20))
+      ];
+    }
+    enemies.push(new Enemy(type, level));
+    // decrease spawn interval but cap at 0.3 seconds
+    spawnTimer = Math.max(0.3, 2 - spawnCount * 0.03);
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
